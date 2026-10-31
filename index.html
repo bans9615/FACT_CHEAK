@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>잠깐, 확인! 팩트체크 앱</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#3b5bdb">
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1b1f2a;--sub:#5d6575;--pri:#3b5bdb;--pri-tx:#fff;--ok:#2b8a3e;--warn:#e8590c;--bd:#e1e5ee;--soft:#edf1ff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141b;--card:#1c1f2a;--tx:#eceef5;--sub:#9aa3b5;--pri:#7c93ff;--pri-tx:#0e1220;--ok:#69db7c;--warn:#ffa94d;--bd:#2c3140;--soft:#242b45;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12141b;--card:#1c1f2a;--tx:#eceef5;--sub:#9aa3b5;--pri:#7c93ff;--pri-tx:#0e1220;--ok:#69db7c;--warn:#ffa94d;--bd:#2c3140;--soft:#242b45;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;line-height:1.5}
+.wrap{max-width:560px;margin:0 auto;padding:14px 14px 90px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+h1{font-size:19px;margin:0}.pts{font-size:13px;background:var(--soft);padding:5px 10px;border-radius:99px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{font-size:15px;margin:0 0 8px}
+textarea{width:100%;min-height:96px;border:1px solid var(--bd);border-radius:10px;padding:10px;font:inherit;background:var(--bg);color:var(--tx);resize:vertical}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:10px 14px;background:var(--pri);color:var(--pri-tx);font-weight:600}
+button.ghost{background:var(--soft);color:var(--tx)}button:disabled{opacity:.45}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.flag{border-left:4px solid var(--warn);background:var(--bg);padding:8px 10px;border-radius:6px;margin:6px 0;font-size:14px}
+.good{border-left-color:var(--ok)}
+.step{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--bd)}
+.step:first-of-type{border-top:0}.step input{width:20px;height:20px;margin-top:3px;accent-color:var(--pri)}
+.step small{display:block;color:var(--sub)}
+.bar{height:8px;background:var(--bd);border-radius:9px;overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:var(--pri);width:0;transition:width .3s}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--bd);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;background:none;color:var(--sub);border-radius:0;padding:13px 4px;font-size:14px}
+nav button.on{color:var(--pri);box-shadow:inset 0 3px 0 var(--pri)}
+.opt{display:block;width:100%;text-align:left;margin-top:8px;background:var(--bg);color:var(--tx);border:1px solid var(--bd)}
+.opt.right{border-color:var(--ok);background:var(--soft)}.opt.wrong{border-color:var(--warn)}
+.quote{background:var(--bg);border:1px dashed var(--bd);border-radius:10px;padding:10px;font-size:14px;margin:8px 0}
+.note{font-size:12px;color:var(--sub)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:9}
+.modal.show{display:flex}.modal .card{max-width:380px;width:100%;margin:0}
+.toast{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);background:var(--tx);color:var(--bg);padding:9px 14px;border-radius:99px;font-size:13px;display:none;z-index:10}
+.hide{display:none}
+.wrap:first-of-type{padding-bottom:0}.w2{padding-top:0}
+input{width:100%;border:1px solid var(--bd);border-radius:10px;padding:10px;font:inherit;background:var(--bg);color:var(--tx);margin-top:8px}
+a.lnk{display:inline-block;background:var(--soft);color:var(--tx);padding:8px 10px;border-radius:9px;text-decoration:none;font-size:13px}
+.vb{flex:1;min-width:90px}.vb.mine{outline:2px solid var(--pri)}
+nav button{font-size:13px}
+nav button{font-size:12px;padding:13px 2px}
+.pop{position:fixed;left:12px;right:12px;bottom:calc(64px + env(safe-area-inset-bottom,0px));max-width:360px;margin:0 auto;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;box-shadow:0 6px 24px rgba(0,0,0,.28);z-index:8}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>🔎 잠깐, 확인!</h1><span class="pts" id="pts">⭐ 0점 · 배지 0개</span></header>
+
+<section id="t-check">
+<div class="card">
+<h2>1. 뉴스·게시글을 붙여 넣어 보세요</h2>
+<textarea id="inp" placeholder="링크나 내용을 붙여 넣으세요. 예: 속보!! 내일부터 전국 휴교, 널리 퍼뜨려 주세요"></textarea>
+<div class="row"><button id="go">점검 시작</button><button class="ghost" id="ex">예시 넣기</button></div>
+<p class="note">이 앱은 의심 단서를 표시할 뿐, 진짜·가짜 판정은 하지 않아요. 최종 판단은 내가 해요.</p>
+</div>
+<div id="res" class="hide">
+<div class="card"><h2>2. 의심 단서 (자동 점검)</h2><div id="flags"></div><div class="row"><button id="cmpbtn">📰 다른 기사와 비교하기</button></div><div id="cmpres"></div></div>
+<div class="card"><h2>3. 직접 확인하기 <span id="pc" class="note"></span></h2>
+<div class="bar"><i id="pb"></i></div><div id="steps"></div></div>
+<div class="card"><h2>4. 내 판단</h2>
+<div class="row"><button class="ghost" data-j="믿을 만해요">믿을 만해요</button><button class="ghost" data-j="의심돼요">의심돼요</button><button class="ghost" data-j="더 알아볼래요">더 알아볼래요</button></div>
+<div id="jmsg" class="note" style="margin-top:8px"></div>
+<div class="row"><button id="share">📤 공유하기</button></div></div>
+</div>
+</section>
+
+<section id="t-quiz" class="hide"><div class="card" id="qbox"></div></section>
+
+<section id="t-cmp" class="hide">
+<div class="card"><h2>같은 사건, 다른 제목</h2>
+<p class="note">연습용 가상 사례예요. 세 제목은 모두 “입장료가 20% 오른다”는 같은 사실을 전해요.</p>
+<div class="quote"><b>A매체</b> 입장료 20% 기습 인상…가족 나들이 ‘날벼락’</div>
+<div class="quote"><b>B매체</b> ○○시 놀이공원, 다음 달부터 입장료 20% 조정</div>
+<div class="quote"><b>C매체</b> 물가 반영해 입장료 인상…이용객 의견 엇갈려</div>
+<p>미션: 감정을 자극하는 단어는 어느 제목에 있나요? 먼저 내 생각을 떠올린 뒤 눌러 보세요.</p>
+<button id="reveal">정답 보기 (+10점)</button>
+<div id="cmpA" class="hide">
+<div class="flag">A: ‘기습’, ‘날벼락’은 놀람과 분노를 일으키는 표현이에요.</div>
+<div class="flag good">B: ‘조정’은 비교적 중립적이지만 인상이라는 사실이 약해 보일 수 있어요.</div>
+<div class="flag good">C: 이용객 의견을 함께 전해 여러 입장을 보여 줘요.</div>
+<p class="note">같은 사실도 단어에 따라 느낌이 달라져요. 한 매체만 보지 말고 2~3곳을 비교해 보세요.</p></div>
+</div></section>
+</div>
+
+<div class="wrap w2">
+<section id="t-live" class="hide">
+<div class="card"><h2>📡 진짜??? 가짜???</h2>
+<p class="note">지금 올라온 뉴스 제목을 가져와 다른 언론사 기사와 견줘 봐요. 점수는 참고용이고 판단은 내가 해요.</p>
+<div class="row"><button id="lre">새로고침</button><button class="ghost" id="clipb">복사한 글 자동 감지 켜기</button></div>
+<p class="note" id="clipn"></p></div><div id="llist"></div></section>
+<section id="t-issue" class="hide">
+<div class="card"><h2>🔥 요즘 이슈, 직접 확인해 보기</h2>
+<p class="note">주변에서 들은 이슈나 주장을 등록하고, 기사·자료를 직접 찾아본 뒤 내 판단을 남겨요. 앱은 정답을 알려 주지 않아요. 실명·연락처 같은 개인정보는 쓰지 마세요.</p>
+<input id="itl" placeholder="이슈 제목" maxlength="60">
+<textarea id="iclaim" placeholder="들은 주장을 한두 문장으로 적어 주세요" maxlength="200" style="margin-top:8px;min-height:64px"></textarea>
+<div class="row"><button id="iadd">이슈 등록</button></div></div>
+<div id="ilist"></div></section>
+<section id="t-acct" class="hide"><div class="card" id="abox"></div></section>
+</div>
+
+<div class="modal" id="modal"><div class="card"><h2>✋ 잠깐, 확인해 볼까요?</h2>
+<p id="mtxt"></p><div class="row"><button id="back">더 확인하기</button><button class="ghost" id="anyway">그래도 공유</button></div></div></div>
+<div class="pop hide" id="pop"></div><div class="toast" id="toast"></div>
+
+<nav><button class="on" data-t="check">점검</button><button data-t="quiz">퀴즈</button><button data-t="cmp">비교</button><button data-t="live">진짜?가짜?</button><button data-t="issue">이슈판</button><button data-t="acct">내 계정</button></nav>
+
+<script>
+var $=function(i){return document.getElementById(i)};
+var pts=0,badges=0,done=[false,false,false,false];
+var STEPS=[["출처가 있나요?","누가 만들었는지, 기사라면 언론사·기자가 적혀 있는지 봐요."],["날짜가 맞나요?","오래된 글이 다시 돌고 있는 건 아닌지 날짜를 확인해요."],["근거가 있나요?","통계·인용·자료의 출처가 나와 있는지 봐요."],["다른 곳에서도 확인했나요?","다른 언론사나 공식 사이트에서 같은 내용인지 검색해요."]];
+function upd(){$("pts").textContent=(me?me.nick:"손님")+" · ⭐"+pts+" · 🏅"+badges}
+function toast(m){var t=$("toast");t.textContent=m;t.style.display="block";setTimeout(function(){t.style.display="none"},2200)}
+function add(n){pts+=n;if(Math.floor(pts/30)>badges){badges=Math.floor(pts/30);toast("🏅 새 배지를 얻었어요!")}upd();saveProg()}
+
+document.querySelectorAll("nav button").forEach(function(b){b.onclick=function(){
+document.querySelectorAll("nav button").forEach(function(x){x.classList.remove("on")});b.classList.add("on");
+["check","quiz","cmp","live","issue","acct"].forEach(function(k){$("t-"+k).classList.toggle("hide",k!==b.dataset.t)});
+if(b.dataset.t==="quiz"&&!$("qbox").innerHTML)startQuiz();if(b.dataset.t==="acct")showAcct();if(b.dataset.t==="live"&&!LIVE)loadLive();if(b.dataset.t==="issue")drawIssues()}});
+
+function analyze(t){var f=[];
+if(/충격|경악|발칵|난리|긴급|속보|단독|폭로|알고 보니|기절/.test(t))f.push("자극적인 단어가 있어요. 감정을 흔들어 클릭·공유를 유도하는 경우가 많아요.");
+if(/!{2,}|\?!|!\?/.test(t))f.push("느낌표를 여러 번 썼어요. 사실 전달보다 흥분을 노린 표현일 수 있어요.");
+if(/퍼뜨|널리|공유|돌려|전달해|알려 주세요|알려주세요/.test(t))f.push("퍼뜨려 달라는 요청이 있어요. 공유부터 하라는 글일수록 먼저 확인이 필요해요.");
+if(!/https?:\/\/|에 따르면|보도|발표|밝혔|출처|자료/.test(t))f.push("출처를 알 수 있는 표현이나 링크가 보이지 않아요.");
+if(!/\d{4}\s*년|\d{1,2}\s*월|\d{1,2}\s*일|오늘|어제/.test(t))f.push("언제 일어난 일인지 날짜가 보이지 않아요.");
+return f}
+
+function render(f){var h="";
+if(!f.length)h='<div class="flag good">뚜렷한 의심 단서는 찾지 못했어요. 그래도 아래 4단계는 직접 확인해 보세요.</div>';
+f.forEach(function(x){h+='<div class="flag">⚠️ '+x+'</div>'});$("flags").innerHTML=h;
+done=[false,false,false,false];var s="";
+STEPS.forEach(function(p,i){s+='<label class="step"><input type="checkbox" data-i="'+i+'"><span><b>'+p[0]+'</b><small>'+p[1]+'</small></span></label>'});
+$("steps").innerHTML=s;prog();
+document.querySelectorAll("#steps input").forEach(function(c){c.onchange=function(){done[c.dataset.i]=c.checked;prog()}});
+$("jmsg").textContent="";$("res").classList.remove("hide")}
+function prog(){var n=done.filter(Boolean).length;$("pb").style.width=(n*25)+"%";$("pc").textContent="("+n+"/4)"}
+
+$("go").onclick=function(){var t=$("inp").value.trim();if(!t){toast("내용을 먼저 붙여 넣어 주세요");return}render(analyze(t))};
+$("ex").onclick=function(){$("inp").value="속보!! 충격 폭로, 내일부터 전국 학교 휴교한다고 함. 가족·친구에게 널리 퍼뜨려 주세요!!"};
+document.querySelectorAll("[data-j]").forEach(function(b){b.onclick=function(){
+var n=done.filter(Boolean).length;
+$("jmsg").textContent="내 판단: "+b.dataset.j+" (확인 "+n+"/4단계)";
+if(n===4){add(15);toast("+15점! 끝까지 확인했어요")}else{toast("확인을 더 하면 점수를 받아요")}}});
+$("share").onclick=function(){var left=[];STEPS.forEach(function(p,i){if(!done[i])left.push(p[0])});
+if(!left.length){toast("확인 완료! 공유는 데모에서 연결되지 않아요");return}
+$("mtxt").textContent="아직 확인하지 않은 단계가 있어요: "+left.join(" / ");$("modal").classList.add("show")};
+$("back").onclick=function(){$("modal").classList.remove("show")};
+$("anyway").onclick=function(){$("modal").classList.remove("show");toast("공유 전에 한 번 더 생각해 줘서 고마워요")};
+
+var Q=[
+{q:"“속보!! 내일부터 모든 학교 휴교, 널리 퍼뜨려 주세요” (출처·날짜 없음)",o:["사실일 가능성이 높다","출처와 날짜가 없어 먼저 확인해야 한다"],a:1,w:"출처·날짜가 없고 공유를 재촉하는 글은 가짜뉴스에서 흔한 패턴이에요."},
+{q:"“○○시청은 15일 공지를 통해 도서관 운영시간을 1시간 늘린다고 밝혔다.” 어떻게 확인할까요?",o:["시청 공식 사이트·공지에서 같은 내용을 찾아본다","댓글이 많으면 믿는다"],a:0,w:"기관이 직접 낸 정보는 공식 채널에서 교차 확인할 수 있어요."},
+{q:"“먹기만 하면 살 빠지는 기적의 차, 전문가들도 놀랐다”",o:["기사처럼 쓴 광고일 수 있다","전문가가 말했으니 사실이다"],a:0,w:"전문가가 누구인지 밝히지 않은 과장 표현은 광고성 글의 특징이에요."},
+{q:"“어제 찍힌 현장 사진”이라는 사진이 돌고 있어요. 가장 좋은 확인법은?",o:["이미지 역검색으로 원본·날짜를 찾는다","사진이 선명한지 본다"],a:0,w:"예전 사진을 새 사건처럼 쓰는 경우가 많아서 원본 출처 확인이 필요해요."},
+{q:"“내가 좋아하는 유튜버가 말했으니 사실이야”",o:["문제없다","내 믿음에 맞는 정보만 믿는 확증편향일 수 있다"],a:1,w:"믿음에 맞는 정보는 쉽게 받아들이게 돼요. 반대 입장도 한 번 찾아보세요."}];
+var qi=0,qs=0;
+function startQuiz(){qi=0;qs=0;showQ()}
+function showQ(){var b=$("qbox");
+if(qi>=Q.length){b.innerHTML="<h2>🎉 끝! "+Q.length+"문제 중 "+qs+"문제 정답</h2><p class='note'>연습용 가상 사례였어요.</p>";var r=document.createElement("button");r.textContent="다시 하기";r.onclick=startQuiz;b.appendChild(r);return}
+var x=Q[qi];b.innerHTML="<h2>미션 "+(qi+1)+"/"+Q.length+"</h2><p></p><div id='opts'></div><div id='why'></div>";
+b.querySelector("p").textContent=x.q;
+x.o.forEach(function(t,i){var o=document.createElement("button");o.className="opt";o.textContent=t;o.onclick=function(){pick(i,o)};$("opts").appendChild(o)})}
+function pick(i,el){var x=Q[qi],bs=document.querySelectorAll(".opt");bs.forEach(function(b){b.disabled=true});
+bs[x.a].classList.add("right");if(i===x.a){qs++;add(10)}else el.classList.add("wrong");
+$("why").innerHTML="<div class='flag good' style='margin-top:10px'></div>";$("why").firstChild.textContent=(i===x.a?"정답! ":"아쉬워요. ")+x.w;
+var n=document.createElement("button");n.textContent=qi<Q.length-1?"다음":"결과 보기";n.style.marginTop="10px";n.onclick=function(){qi++;showQ()};$("why").appendChild(n)}
+
+var db=null,me=null,LS="fc_v1",ISS=[],VOTES=[];
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function lsGet(){try{return JSON.parse(localStorage.getItem(LS))||{}}catch(e){return {}}}
+function lsSet(o){try{localStorage.setItem(LS,JSON.stringify(o))}catch(e){}}
+function hex(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0")}).join("")}
+function sha(s){return crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)).then(hex)}
+function uid(n){return sha("nick:"+n.toLowerCase()).then(function(h){return "u"+h.slice(0,24)})}
+function vid(){if(me)return me.id;var o=lsGet();if(!o.gid){o.gid="g"+hex(crypto.getRandomValues(new Uint8Array(8)));lsSet(o)}return o.gid}
+function saveProg(){var o=lsGet();o.pts=pts;o.badges=badges;
+if(me){if(db&&!me.local)db.doc("accounts/"+me.id).update({pts:pts,badges:badges}).catch(function(){});else if(o.acc&&o.acc[me.id]){o.acc[me.id].pts=pts;o.acc[me.id].badges=badges}}lsSet(o)}
+function setMe(m){me=m;var o=lsGet();o.me=m;lsSet(o);upd();saveProg();showAcct()}
+function signup(nick,pin){
+if(!/^[가-힣a-zA-Z0-9_]{2,12}$/.test(nick))return Promise.reject("닉네임은 2~12자의 한글·영문·숫자·_ 만 쓸 수 있어요");
+if(!/^\d{4,8}$/.test(pin))return Promise.reject("PIN은 숫자 4~8자리예요");
+var salt=hex(crypto.getRandomValues(new Uint8Array(8)));
+return Promise.all([uid(nick),sha(salt+":"+pin)]).then(function(r){var id=r[0],rec={nick:nick,salt:salt,hash:r[1],pts:pts,badges:badges};
+if(db)return db.doc("accounts/"+id).get().then(function(s){if(s.exists)throw "이미 있는 닉네임이에요";return db.doc("accounts/"+id).set(rec)}).then(function(){return {nick:nick,id:id}});
+var o=lsGet();o.acc=o.acc||{};if(o.acc[id])throw "이미 있는 닉네임이에요";o.acc[id]=rec;lsSet(o);return {nick:nick,id:id,local:true}})}
+function login(nick,pin){return uid(nick).then(function(id){
+var g=db?db.doc("accounts/"+id).get().then(function(s){return s.exists?s.data():null}):Promise.resolve((lsGet().acc||{})[id]||null);
+return g.then(function(rec){var bad="닉네임 또는 PIN이 맞지 않아요";if(!rec)throw bad;
+return sha(rec.salt+":"+pin).then(function(h){if(h!==rec.hash)throw bad;pts=Math.max(pts,rec.pts||0);badges=Math.max(badges,rec.badges||0);return {nick:rec.nick,id:id,local:!db}})})})}
+function run(p){p.then(function(m){setMe(m);toast(m.nick+" 님, 환영해요!")}).catch(function(e){toast(typeof e==="string"?e:"문제가 생겼어요. 다시 시도해 주세요")})}
+function showAcct(){var b=$("abox");b.innerHTML="";b.appendChild(el("h2","","👤 내 계정"));
+b.appendChild(el("p","note",db?"☁️ 공유 서버에 연결됨 · 다른 기기에서도 같은 닉네임으로 로그인할 수 있어요":"📱 서버에 연결되지 않아 이 기기에만 저장돼요"));
+if(me){b.appendChild(el("p","",me.nick+" 님 · 점수 "+pts+"점 · 배지 "+badges+"개"));var o=el("button","ghost","로그아웃");o.onclick=function(){me=null;pts=0;badges=0;var s=lsGet();s.me=null;s.pts=0;s.badges=0;lsSet(s);upd();showAcct()};b.appendChild(o);return}
+b.appendChild(el("p","note","로그인하지 않아도 모든 기능을 쓸 수 있어요. 계정을 만들면 점수와 배지가 저장돼요."));
+var n=el("input");n.placeholder="닉네임 (2~12자)";n.maxLength=12;n.autocomplete="off";
+var p=el("input");p.type="password";p.inputMode="numeric";p.placeholder="PIN 숫자 4~8자리";p.maxLength=8;p.autocomplete="off";
+b.appendChild(n);b.appendChild(p);var r=el("div","row"),s1=el("button","","가입하기"),s2=el("button","ghost","로그인");
+s1.onclick=function(){run(signup(n.value.trim(),p.value))};s2.onclick=function(){run(login(n.value.trim(),p.value))};
+r.appendChild(s1);r.appendChild(s2);b.appendChild(r);
+b.appendChild(el("p","note","실명 대신 닉네임을 쓰고, PIN은 다른 서비스 비밀번호와 다르게 정해요. 이 앱은 연습용 시제품이라 중요한 정보는 넣지 마세요."))}
+function watchIssues(){db.collection("issues").onSnapshot(function(s){ISS=s.docs.map(function(d){var x=d.data();x.id=d.id;return x});drawIssues()});
+db.collection("votes").onSnapshot(function(s){VOTES=s.docs.map(function(d){return d.data()});drawIssues()})}
+function vote(id,ch,had){var v=vid(),rec={issue:id,voter:v,choice:ch};
+if(db)db.doc("votes/"+id+"_"+v).set(rec).catch(function(){toast("저장하지 못했어요")});
+else{VOTES=VOTES.filter(function(x){return !(x.issue===id&&x.voter===v)}).concat(rec);var o=lsGet();o.vts=VOTES;lsSet(o);drawIssues()}
+if(!had)add(5)}
+function drawIssues(){var box=$("ilist");if(!box)return;box.innerHTML="";
+if(!ISS.length){box.appendChild(el("p","note","아직 등록된 이슈가 없어요. 위에서 첫 이슈를 등록해 보세요."));return}
+var v=vid();ISS.slice().sort(function(a,b){return (b.at||0)-(a.at||0)}).forEach(function(it){
+var c=el("div","card");c.appendChild(el("h2","",it.t));c.appendChild(el("div","quote",it.c));c.appendChild(el("p","note","등록: "+(it.by||"손님")));
+var r=el("div","row");[["네이버 뉴스","https://search.naver.com/search.naver?where=news&query="+encodeURIComponent(it.t)],["구글 팩트체크","https://www.google.com/search?q="+encodeURIComponent(it.t+" 팩트체크")],["SNU 팩트체크","https://factcheck.snu.ac.kr"]].forEach(function(l){var a=el("a","lnk",l[0]+" ↗");a.href=l[1];a.target="_blank";a.rel="noopener noreferrer";r.appendChild(a)});c.appendChild(r);
+c.appendChild(el("p","note","① 링크로 직접 찾아본 뒤 ② 내 판단을 눌러요. 판단한 뒤에 다른 사람의 결과가 보여요."));
+var mine=null,cnt={};VOTES.forEach(function(x){if(x.issue===it.id){cnt[x.choice]=(cnt[x.choice]||0)+1;if(x.voter===v)mine=x.choice}});
+var vr=el("div","row");["믿을 만해요","의심돼요","더 알아볼래요"].forEach(function(ch){var b=el("button","ghost vb"+(mine===ch?" mine":""),ch+(mine?" ("+(cnt[ch]||0)+")":""));b.onclick=function(){vote(it.id,ch,!!mine)};vr.appendChild(b)});
+c.appendChild(vr);box.appendChild(c)})}
+$("iadd").onclick=function(){var t=$("itl").value.trim(),c=$("iclaim").value.trim();if(t.length<2||c.length<4){toast("제목과 주장을 적어 주세요");return}
+var rec={t:t,c:c,by:me?me.nick:"손님",at:Date.now()};
+if(db)db.collection("issues").add(rec).then(function(){toast("등록했어요")}).catch(function(){toast("등록하지 못했어요")});
+else{rec.id="l"+rec.at;ISS.push(rec);var o=lsGet();o.iss=ISS;lsSet(o);drawIssues()}
+$("itl").value="";$("iclaim").value=""};
+(function(){var o=lsGet();pts=o.pts||0;badges=o.badges||0;me=o.me||null;ISS=o.iss||[];VOTES=o.vts||[];
+try{if(window.claude&&claude.use)claude.use("db").then(function(d){db=d;if(db){ISS=[];VOTES=[];watchIssues()}showAcct()}).catch(function(){})}catch(e){}})();
+var LIVE=false,clipOn=!!lsGet().clip,lastClip="";
+function showCheck(box,text){box.innerHTML="";box.appendChild(el("p","note","다른 언론사 기사와 비교하는 중…"));
+fetch("/api/check",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({text:text})}).then(function(r){return r.json()}).then(function(d){
+box.innerHTML="";if(d.error){box.appendChild(el("div","flag",d.error));return}
+var fg=analyze(text),s=Math.max(5,Math.min(95,55-15*Math.min(d.publishers,3)+10*Math.min(fg.length,3)));
+box.appendChild(el("p","","의심도 "+s+"점 (참고용) · "+d.level+" · 비슷한 기사를 낸 언론사 "+d.publishers+"곳"));
+var g=el("div","bar"),i=el("i");i.style.width=s+"%";i.style.background=s>=65?"var(--warn)":s>=40?"var(--pri)":"var(--ok)";g.appendChild(i);box.appendChild(g);
+fg.forEach(function(x){box.appendChild(el("div","flag","⚠️ "+x))});
+box.appendChild(el("p","note",d.publishers?"같은 내용을 다룬 다른 기사예요. 같은 사실을 말하는지, 숫자·표현이 다른지 비교해 보세요.":"비슷한 기사를 찾지 못했어요. 가짜라는 뜻은 아니고, 아주 새 소식이거나 검색어가 달라서일 수 있어요."));
+d.articles.forEach(function(a){var c=el("div","quote");c.appendChild(el("b","",a.source));c.appendChild(document.createTextNode(" · 유사도 "+Math.round(a.sim*100)+"%"));c.appendChild(document.createElement("br"));
+var l=el("a","",a.title);if(/^https?:\/\//.test(a.link))l.href=a.link;l.target="_blank";l.rel="noopener noreferrer";c.appendChild(l);box.appendChild(c)});
+box.appendChild(el("p","note","점수 계산: 기본 55점 − 언론사 1곳당 15점(최대 45) + 의심 단서 1개당 10점(최대 30). 사실일 확률이 아니라 참고용 지표예요. 링크를 열어 직접 읽고 판단하세요."));
+add(5)}).catch(function(){box.innerHTML="";box.appendChild(el("div","flag","서버에 연결하지 못했어요. server.js와 함께 배포해야 작동해요."))})}
+function loadLive(){LIVE=true;var b=$("llist");b.innerHTML="";b.appendChild(el("p","note","실시간 뉴스를 불러오는 중…"));
+fetch("/api/trending").then(function(r){return r.json()}).then(function(L){b.innerHTML="";if(!Array.isArray(L)||!L.length)throw 0;
+L.forEach(function(n){var c=el("div","card");c.appendChild(el("h2","",n.title));
+c.appendChild(el("p","note",n.source+(n.date?" · "+new Date(n.date).toLocaleString("ko-KR",{month:"numeric",day:"numeric",hour:"numeric",minute:"numeric"}):"")));
+var o=el("div"),btn=el("button","","진짜?? 가짜?? 확인하기");btn.onclick=function(){showCheck(o,n.title)};c.appendChild(btn);c.appendChild(o);b.appendChild(c)})
+}).catch(function(){LIVE=false;b.innerHTML="";b.appendChild(el("div","flag","실시간 뉴스를 불러오지 못했어요. 서버(server.js)와 함께 배포해야 작동해요."))})}
+$("lre").onclick=loadLive;
+$("cmpbtn").onclick=function(){var t=$("inp").value.trim();if(t)showCheck($("cmpres"),t)};
+function goCheck(t){$("inp").value=t;document.querySelector('nav [data-t="check"]').click();$("go").click();showCheck($("cmpres"),t)}
+function pop(t){var p=$("pop");p.innerHTML="";p.appendChild(el("b","","✋ 잠깐, 확인해 볼까요?"));p.appendChild(el("div","note",t.slice(0,60)+(t.length>60?"…":"")));
+var r=el("div","row"),y=el("button","","확인할래요"),n=el("button","ghost","나중에");
+y.onclick=function(){p.classList.add("hide");goCheck(t)};n.onclick=function(){p.classList.add("hide")};r.appendChild(y);r.appendChild(n);p.appendChild(r);p.classList.remove("hide")}
+function newsy(t){return /https?:\/\//.test(t)||(t.length>25&&/(했다|밝혔다|전했다|속보|단독|라고 함)/.test(t))}
+function watchClip(){if(!navigator.clipboard||!navigator.clipboard.readText)return;
+navigator.clipboard.readText().then(function(t){t=(t||"").trim();if(t&&t!==lastClip&&newsy(t)){lastClip=t;pop(t)}}).catch(function(){})}
+function clipUI(){$("clipb").textContent=clipOn?"복사한 글 자동 감지 끄기":"복사한 글 자동 감지 켜기";
+$("clipn").textContent=clipOn?"앱으로 돌아올 때 복사한 뉴스를 감지하면 작은 알림을 띄워요.":"켜면 클립보드 읽기 허용을 물어봐요. 복사한 내용은 ‘확인할래요’를 누를 때만 서버로 보내요."}
+$("clipb").onclick=function(){clipOn=!clipOn;var o=lsGet();o.clip=clipOn;lsSet(o);clipUI();if(clipOn)watchClip()};
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&clipOn)watchClip()});
+(function(){var q=new URLSearchParams(location.search),s=[q.get("title"),q.get("text"),q.get("url")].filter(Boolean).join(" ");
+if(s){history.replaceState(null,"",location.pathname);setTimeout(function(){pop(s)},300)}clipUI();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(function(){})})();
+var cmpDone=false;
+$("reveal").onclick=function(){$("cmpA").classList.remove("hide");if(!cmpDone){cmpDone=true;add(10)}};
+upd();
+</script>
+</body>
+</html>
